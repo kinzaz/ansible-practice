@@ -1,2 +1,3 @@
 learning_dir: /opt/ansible-learning
 learning_message: This server is managed by Ansible.
+jenkins_api_user: devops

@@ -61,3 +61,27 @@
     daemon_reload: true
     state: started
     enabled: true
+
+- name: Apply pending agent changes before checking connection
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait until Jenkins agent is online
+  ansible.builtin.uri:
+    url: "{{ jenkins_controller_url }}/computer/{{ jenkins_agent_name | urlencode }}/api/json?tree=offline"
+    method: GET
+    url_username: "{{ jenkins_api_user }}"
+    url_password: "{{ jenkins_api_token }}"
+    force_basic_auth: true
+    status_code: 200
+    timeout: 10
+  register: jenkins_agent_status
+  until:
+    - jenkins_agent_status.status | default(0) == 200
+    - not (jenkins_agent_status.json.offline | default(true) | bool)
+  retries: 30
+  delay: 5
+  no_log: true
+
+- name: Report Jenkins agent readiness
+  ansible.builtin.debug:
+    msg: "Jenkins agent {{ jenkins_agent_name }} is online."
