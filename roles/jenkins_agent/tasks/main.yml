@@ -28,21 +28,20 @@
     groups: docker
     append: true
 
-- name: Ensure Jenkins agent directory exists
+- name: Ensure Jenkins agent directories exist
   ansible.builtin.file:
-    path: "{{ jenkins_agent_dir }}"
+    path: "{{ item.path }}"
     state: directory
     owner: "{{ jenkins_agent_user }}"
     group: "{{ jenkins_agent_user }}"
-    mode: '0750'
-
-- name: Ensure Jenkins agent temporary directory exists
-  ansible.builtin.file:
-    path: "{{ jenkins_agent_dir }}/tmp"
-    state: directory
-    owner: "{{ jenkins_agent_user }}"
-    group: "{{ jenkins_agent_user }}"
-    mode: '0700'
+    mode: "{{ item.mode }}"
+  loop:
+    - path: "{{ jenkins_agent_dir }}"
+      mode: '0750'
+    - path: "{{ jenkins_agent_dir }}/tmp"
+      mode: '0700'
+  loop_control:
+    label: "{{ item.path }}"
 
 - name: Download Jenkins agent program
   ansible.builtin.get_url:
