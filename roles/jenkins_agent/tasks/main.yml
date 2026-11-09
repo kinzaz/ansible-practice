@@ -1,3 +1,25 @@
+- name: Validate Jenkins API username
+  ansible.builtin.assert:
+    that:
+      - jenkins_api_user is defined
+      - jenkins_api_user is string
+      - jenkins_api_user | trim | length > 0
+    fail_msg: Set jenkins_api_user in group variables.
+    quiet: true
+
+- name: Validate Jenkins secrets
+  ansible.builtin.assert:
+    that:
+      - jenkins_agent_secret is defined
+      - jenkins_agent_secret is string
+      - jenkins_agent_secret | trim | length > 0
+      - jenkins_api_token is defined
+      - jenkins_api_token is string
+      - jenkins_api_token | trim | length > 0
+    fail_msg: Required Jenkins secrets must be nonempty strings.
+    quiet: true
+  no_log: true
+
 - name: Ensure Jenkins agent user exists
   ansible.builtin.user:
     name: "{{ jenkins_agent_user }}"
