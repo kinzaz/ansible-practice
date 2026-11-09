@@ -1,0 +1,12 @@
+- name: Reboot Jenkins server
+  hosts: jenkins
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Reboot and wait for server availability
+      ansible.builtin.reboot:
+        connect_timeout: 5
+        reboot_timeout: 600
+        post_reboot_delay: 10
+        test_command: whoami
