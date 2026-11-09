@@ -1,0 +1,34 @@
+- name: Prepare initial administrator access
+  hosts: jenkins
+  become: false
+  gather_facts: false
+
+  vars:
+    ansible_user: root
+
+  tasks:
+    - name: Validate administrator password hash
+      ansible.builtin.assert:
+        that:
+          - bootstrap_admin_password_hash is defined
+          - bootstrap_admin_password_hash is string
+          - bootstrap_admin_password_hash.startswith('$6$')
+      no_log: true
+
+    - name: Ensure administrator account exists
+      ansible.builtin.user:
+        name: devops
+        shell: /bin/bash
+        create_home: true
+        groups: sudo
+        append: true
+        password: "{{ bootstrap_admin_password_hash }}"
+        update_password: on_create
+      no_log: true
+
+    - name: Ensure Ansible public key is authorized
+      ansible.posix.authorized_key:
+        user: devops
+        key: "{{ lookup('ansible.builtin.file', '/home/ansible/.ssh/ansible_learning.pub') }}"
+        state: present
+        exclusive: false
