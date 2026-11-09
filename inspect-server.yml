@@ -1,0 +1,22 @@
+- name: Inspect Jenkins server
+  hosts: jenkins
+  gather_facts: true
+
+  tasks:
+    - name: Show server information
+      ansible.builtin.debug:
+        msg:
+          - "Hostname: {{ ansible_facts['hostname'] }}"
+          - "OS: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}"
+          - "Architecture: {{ ansible_facts['architecture'] }}"
+          - "Memory: {{ ansible_facts['memtotal_mb'] }} MiB"
+
+    - name: Show Ubuntu message
+      ansible.builtin.debug:
+        msg: This task runs on Ubuntu.
+      when: ansible_facts['distribution'] == 'Ubuntu'
+
+    - name: Show Rocky Linux message
+      ansible.builtin.debug:
+        msg: This task runs on Rocky Linux.
+      when: ansible_facts['distribution'] == 'Rocky'

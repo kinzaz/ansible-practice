@@ -1,0 +1,22 @@
+- name: Prepare learning directory
+  hosts: jenkins
+  gather_facts: false
+
+  tasks:
+    - name: Ensure learning directory exists
+      ansible.builtin.file:
+        path: "{{ learning_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Write learning file
+      ansible.builtin.copy:
+        dest: "{{ learning_dir }}/hello.txt"
+        content: |
+          {{ learning_message }}
+          This file was created during our course.
+        owner: root
+        group: root
+        mode: '0644'

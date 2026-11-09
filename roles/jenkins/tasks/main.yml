@@ -1,0 +1,21 @@
+- name: Ensure Jenkins project directory exists
+  ansible.builtin.file:
+    path: "{{ jenkins_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Write Jenkins Compose configuration
+  ansible.builtin.template:
+    src: jenkins-compose.yaml.j2
+    dest: "{{ jenkins_dir }}/compose.yaml"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Ensure Jenkins container is running
+  community.docker.docker_compose_v2:
+    project_src: "{{ jenkins_dir }}"
+    state: present
+    pull: missing

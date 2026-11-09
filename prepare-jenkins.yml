@@ -1,0 +1,107 @@
+- name: Prepare Jenkins server
+  hosts: jenkins
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Verify supported operating system
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['distribution'] == 'Ubuntu'
+        fail_msg: This playbook currently supports Ubuntu.
+        success_msg: Ubuntu detected.
+
+    - name: Ensure basic tools are installed
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - git
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Configure Docker
+      ansible.builtin.import_role:
+        name: docker
+
+    - name: Ensure Java for Jenkins agent is installed
+      ansible.builtin.apt:
+        name: openjdk-21-jre-headless
+        state: present
+
+    - name: Read Java version
+      ansible.builtin.command:
+        cmd: /usr/bin/java -version
+      register: java_version
+      changed_when: false
+
+    - name: Show Java version
+      ansible.builtin.debug:
+        var: java_version.stderr_lines
+
+    - name: Ensure swap file exists
+      ansible.builtin.command:
+        cmd: fallocate -l 2G /swapfile
+        creates: /swapfile
+
+    - name: Set swap file ownership and permissions
+      ansible.builtin.file:
+        path: /swapfile
+        state: file
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: Read swap file information
+      ansible.builtin.stat:
+        path: /swapfile
+      register: swap_file
+
+    - name: Show swap file size
+      ansible.builtin.debug:
+        msg: "Swap file size: {{ swap_file.stat.size }} bytes"
+
+    - name: Read swap file format
+      ansible.builtin.command:
+        cmd: blkid -p -s TYPE -o value /swapfile
+      register: swap_format
+      changed_when: false
+      failed_when: swap_format.rc not in [0, 2]
+
+    - name: Verify swap file has an expected format
+      ansible.builtin.assert:
+        that:
+          - swap_format.stdout | trim in ['', 'swap']
+        fail_msg: The file contains an unexpected filesystem.
+
+    - name: Initialize swap file
+      ansible.builtin.command:
+        cmd: mkswap /swapfile
+      when: swap_format.stdout | trim == ''
+
+    - name: Read active swap files
+      ansible.builtin.command:
+        cmd: swapon --show=NAME --noheadings --raw
+      register: active_swap
+      changed_when: false
+
+    - name: Enable swap file
+      ansible.builtin.command:
+        cmd: swapon /swapfile
+      when: "'/swapfile' not in active_swap.stdout_lines"
+
+    - name: Enable swap file at boot
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '^\s*/swapfile\s+'
+        line: '/swapfile none swap sw 0 0'
+        state: present
+
+    - name: Configure Jenkins
+      ansible.builtin.import_role:
+        name: jenkins
+
+    - name: Prepare Jenkins agent
+      ansible.builtin.import_role:
+        name: jenkins_agent

@@ -1,0 +1,63 @@
+- name: Ensure Jenkins agent user exists
+  ansible.builtin.user:
+    name: "{{ jenkins_agent_user }}"
+    shell: /bin/bash
+    create_home: true
+    groups: docker
+    append: true
+
+- name: Ensure Jenkins agent directory exists
+  ansible.builtin.file:
+    path: "{{ jenkins_agent_dir }}"
+    state: directory
+    owner: "{{ jenkins_agent_user }}"
+    group: "{{ jenkins_agent_user }}"
+    mode: '0750'
+
+- name: Ensure Jenkins agent temporary directory exists
+  ansible.builtin.file:
+    path: "{{ jenkins_agent_dir }}/tmp"
+    state: directory
+    owner: "{{ jenkins_agent_user }}"
+    group: "{{ jenkins_agent_user }}"
+    mode: '0700'
+
+- name: Download Jenkins agent program
+  ansible.builtin.get_url:
+    url: "{{ jenkins_controller_url }}/jnlpJars/agent.jar"
+    dest: "{{ jenkins_agent_dir }}/agent.jar"
+    owner: "{{ jenkins_agent_user }}"
+    group: "{{ jenkins_agent_user }}"
+    mode: '0644'
+  register: agent_download
+  until: agent_download is succeeded
+  retries: 30
+  delay: 5
+  notify: Restart Jenkins agent
+
+- name: Write Jenkins agent secret
+  ansible.builtin.copy:
+    dest: "{{ jenkins_agent_dir }}/agent.secret"
+    content: "{{ jenkins_agent_secret }}"
+    owner: "{{ jenkins_agent_user }}"
+    group: "{{ jenkins_agent_user }}"
+    mode: '0600'
+  no_log: true
+  diff: false
+  notify: Restart Jenkins agent
+
+- name: Write Jenkins agent service
+  ansible.builtin.template:
+    src: jenkins-agent.service.j2
+    dest: /etc/systemd/system/jenkins-agent.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Jenkins agent
+
+- name: Ensure Jenkins agent service is running and enabled
+  ansible.builtin.systemd_service:
+    name: jenkins-agent
+    daemon_reload: true
+    state: started
+    enabled: true

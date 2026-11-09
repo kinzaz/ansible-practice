@@ -1,0 +1,19 @@
+- name: Learn handlers
+  hosts: jenkins
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Write demonstration configuration
+      ansible.builtin.template:
+        src: templates/demo.conf.j2
+        dest: /opt/ansible-learning/demo.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Report configuration change
+
+  handlers:
+    - name: Report configuration change
+      ansible.builtin.debug:
+        msg: Configuration changed. Handler executed.

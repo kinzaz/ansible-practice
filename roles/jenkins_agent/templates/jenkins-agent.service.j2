@@ -1,0 +1,16 @@
+[Unit]
+Description=Jenkins build agent
+Wants=network-online.target docker.service
+After=network-online.target docker.service
+
+[Service]
+User={{ jenkins_agent_user }}
+Group={{ jenkins_agent_user }}
+WorkingDirectory={{ jenkins_agent_dir }}
+ExecStart=/usr/bin/java -Djava.io.tmpdir={{ jenkins_agent_dir }}/tmp -jar {{ jenkins_agent_dir }}/agent.jar -url {{ jenkins_controller_url }}/ -name {{ jenkins_agent_name }} -secret @{{ jenkins_agent_dir }}/agent.secret -webSocket -workDir {{ jenkins_agent_dir }}
+Restart=always
+RestartSec=10
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

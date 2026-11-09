@@ -1,0 +1,2 @@
+jenkins_dir: /opt/jenkins
+jenkins_image: jenkins/jenkins:lts-jdk21

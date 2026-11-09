@@ -1,0 +1,13 @@
+- name: Install tools on Jenkins server
+  hosts: jenkins
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Ensure tree is installed
+      ansible.builtin.apt:
+        name: tree
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_facts['distribution'] == 'Ubuntu'

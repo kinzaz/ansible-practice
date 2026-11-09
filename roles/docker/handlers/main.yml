@@ -1,0 +1,3 @@
+- name: Refresh Docker APT cache
+  ansible.builtin.apt:
+    update_cache: true

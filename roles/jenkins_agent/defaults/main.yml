@@ -1,0 +1,4 @@
+jenkins_agent_user: jenkins-agent
+jenkins_agent_dir: /home/jenkins-agent/agent
+jenkins_controller_url: http://127.0.0.1:8080
+jenkins_agent_name: docker-builder

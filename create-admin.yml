@@ -1,0 +1,28 @@
+- name: Prepare administrator account
+  hosts: jenkins
+  gather_facts: false
+
+  tasks:
+    - name: Ensure devops user exists
+      ansible.builtin.user:
+        name: devops
+        shell: /bin/bash
+        create_home: true
+        groups: sudo
+        append: true
+
+    - name: Ensure SSH directory exists
+      ansible.builtin.file:
+        path: /home/devops/.ssh
+        state: directory
+        owner: devops
+        group: devops
+        mode: '0700'
+
+    - name: Install administrator public key
+      ansible.builtin.copy:
+        dest: /home/devops/.ssh/authorized_keys
+        content: "{{ lookup('ansible.builtin.file', '/home/ansible/.ssh/ansible_learning.pub') }}\n"
+        owner: devops
+        group: devops
+        mode: '0600'

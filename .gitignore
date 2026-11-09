@@ -1,0 +1,16 @@
+# Локальные файлы с паролем Vault
+.vault-pass*
+.vault_password*
+.vault-password*
+
+# Закрытые ключи и локальные SSH-настройки
+.ssh/
+ansible_learning
+*.key
+*.pem
+
+# Временные файлы и резервные копии упражнений
+*.retry
+*.before-*
+*.swp
+*~
